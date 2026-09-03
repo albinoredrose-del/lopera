@@ -395,10 +395,52 @@
             </div>
             <div class="tag-chips">
                 
+                
+                <a href="/lopera/tags/web/" title="web: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="web" style="background-color: #F9EBEA;">web
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
+                
+                <a href="/lopera/tags/NepCTF2026/" title="NepCTF2026: 1">
+                    <span class="chip center-align waves-effect waves-light
+                             chip-default "
+                            data-tagname="NepCTF2026" style="background-color: #F5EEF8;">NepCTF2026
+                        <span class="tag-length">1</span>
+                    </span>
+                </a>
+                
             </div>
         </div>
     </div>
 </div>
+
+    
+    <link rel="stylesheet" type="text/css" href="/lopera/libs/jqcloud/jqcloud.css">
+<style type="text/css">
+    #tag-wordcloud {
+        width: 100%;
+        height: 300px;
+    }
+</style>
+
+<div class="container" data-aos="fade-up">
+    <div class="card">
+        <div id="tag-wordcloud" class="card-content"></div>
+    </div>
+</div>
+
+<script type="text/javascript" src="/lopera/libs/jqcloud/jqcloud-1.0.4.min.js"></script>
+<script type="text/javascript">
+    
+
+    $('#tag-wordcloud').jQCloud([{"text":"web","weight":1,"link":"/lopera/tags/web/"},{"text":"NepCTF2026","weight":1,"link":"/lopera/tags/NepCTF2026/"}], {
+        autoResize: true
+    });
+</script>
 
     
 
