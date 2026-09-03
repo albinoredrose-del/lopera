@@ -1,0 +1,74 @@
+/* Here is your custom css styles. */
+/* 代码块整体 */
+#articleContent pre {
+    background: #282c34 !important;
+    border-radius: 10px;
+    padding: 2rem 1rem 1rem 3rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+}
+
+/* 代码文字 */
+#articleContent figure.highlight pre,
+#articleContent figure.highlight pre * {
+    color: #abb2bf;
+    background: transparent;
+    font-size: 15px !important;
+    font-family: Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace !important;
+    line-height: 1.6 !important;
+}
+
+/* 防止主题的 .title 等全局样式影响代码高亮标签 */
+#articleContent figure.highlight .title,
+#articleContent figure.highlight .class_,
+#articleContent figure.highlight .function_,
+#articleContent figure.highlight .keyword,
+#articleContent figure.highlight .type,
+#articleContent figure.highlight .params,
+#articleContent figure.highlight .string {
+    font-size: 15px !important;
+    font-family: Inconsolata, Monaco, Consolas, 'Courier New', Courier, monospace !important;
+    line-height: 1.6 !important;
+}
+
+/* 行内代码 */
+#articleContent code:not(pre code) {
+    color: #e96900;
+    background: #f3f3f3;
+    border-radius: 4px;
+}
+
+/* 取消代码块内部 table/td 被文章表格样式带来的白色边框 */
+#articleContent figure.highlight,
+#articleContent figure.highlight table,
+#articleContent figure.highlight tr,
+#articleContent figure.highlight td {
+    border: 0 !important;
+    background: transparent !important;
+}
+
+#articleContent figure.highlight table {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+#articleContent figure.highlight td {
+    padding: 0 !important;
+}
+
+/* 缩窄代码块行号区域 */
+#articleContent figure.highlight td.gutter {
+    width: 3rem !important;
+    min-width: 3rem !important;
+    vertical-align: top;
+}
+
+#articleContent figure.highlight td.gutter pre {
+    width: auto !important;
+    padding: 2rem 0.6rem 1rem 0.6rem !important;
+    text-align: right;
+}
+
+#articleContent figure.highlight td.code {
+    width: auto !important;
+}
