@@ -30,6 +30,38 @@
     line-height: 1.6 !important;
 }
 
+/* 当前 Hexo 高亮生成的关键词配色 */
+#articleContent figure.highlight .keyword {
+    color: #c678dd !important;
+}
+
+#articleContent figure.highlight .title.class_,
+#articleContent figure.highlight .title.function_ {
+    color: #61afef !important;
+}
+
+#articleContent figure.highlight .type {
+    color: #e5c07b !important;
+}
+
+#articleContent figure.highlight .params {
+    color: #abb2bf !important;
+}
+
+#articleContent figure.highlight .string {
+    color: #98c379 !important;
+}
+
+#articleContent figure.highlight .number,
+#articleContent figure.highlight .literal {
+    color: #d19a66 !important;
+}
+
+#articleContent figure.highlight .comment {
+    color: #7f848e !important;
+    font-style: italic;
+}
+
 /* 行内代码 */
 #articleContent code:not(pre code) {
     color: #e96900;

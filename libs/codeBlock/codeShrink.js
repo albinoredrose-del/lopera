@@ -5,12 +5,15 @@ $(function () {
 
   $('.code-area').prepend($code_expand);
   $('.code-expand').on('click', function () {
-    if ($(this).parent().hasClass('code-closed')) {
-      $(this).siblings('pre').find('code').show();
-      $(this).parent().removeClass('code-closed');
+    var $area = $(this).closest('.code-area');
+    var $pre = $area.find('pre').first();
+
+    if ($area.hasClass('code-closed')) {
+      $pre.stop(true, true).slideDown(200);
+      $area.removeClass('code-closed');
     } else {
-      $(this).siblings('pre').find('code').hide();
-      $(this).parent().addClass('code-closed');
+      $pre.stop(true, true).slideUp(200);
+      $area.addClass('code-closed');
     }
   });
 });

@@ -7,31 +7,33 @@ $(function () {
     $('.code-area').prepend($notice)
     // “复制成功”字出现
     function copy(text, ctx) {
+        var $notice = $(ctx).closest('.code-area').find('.codecopy_notice')
+
         if (document.queryCommandSupported && document.queryCommandSupported('copy')) {
             try {
                 document.execCommand('copy') // Security exception may be thrown by some browsers.
-                $(ctx).prev('.codecopy_notice')
+                $notice
                     .text("复制成功")
                     .animate({
                         opacity: 1,
                         top: 30
                     }, 450, function () {
                         setTimeout(function () {
-                            $(ctx).prev('.codecopy_notice').animate({
+                            $notice.animate({
                                 opacity: 0,
                                 top: 0
                             }, 650)
                         }, 400)
                     })
             } catch (ex) {
-                $(ctx).prev('.codecopy_notice')
+                $notice
                     .text("复制失败")
                     .animate({
                         opacity: 1,
                         top: 30
                     }, 650, function () {
                         setTimeout(function () {
-                            $(ctx).prev('.codecopy_notice').animate({
+                            $notice.animate({
                                 opacity: 0,
                                 top: 0
                             }, 650)
@@ -40,14 +42,22 @@ $(function () {
                 return false
             }
         } else {
-            $(ctx).prev('.codecopy_notice').text("浏览器不支持复制")
+            $notice.text("浏览器不支持复制")
         }
     }
     // 复制
     $('.code-area .fa-copy').on('click', function () {
+        var $area = $(this).closest('.code-area')
+        var codeElement = $area.find('pre')[0]
+        var $notice = $area.find('.codecopy_notice')
+
+        if (!codeElement) {
+            return
+        }
+
         var selection = window.getSelection()
         var range = document.createRange()
-        range.selectNodeContents($(this).siblings('pre').find('code')[0])
+        range.selectNodeContents(codeElement)
         selection.removeAllRanges()
         selection.addRange(range)
         var text = selection.toString()
