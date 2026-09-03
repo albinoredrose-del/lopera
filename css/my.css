@@ -80,8 +80,9 @@
 
 #articleContent figure.highlight table {
     display: table;
-    width: 100%;
-    table-layout: fixed;
+    width: max-content !important;
+    min-width: 100%;
+    table-layout: auto;
 }
 
 #articleContent figure.highlight td {
@@ -103,4 +104,27 @@
 
 #articleContent figure.highlight td.code {
     width: auto !important;
+}
+
+/* 长代码在代码块内横向滚动，不撑破页面 */
+#articleContent figure.highlight {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    box-sizing: border-box;
+}
+
+#articleContent figure.highlight td.code,
+#articleContent figure.highlight td.code .code-area {
+    min-width: max-content;
+}
+
+#articleContent figure.highlight td.code .code-area {
+    width: max-content;
+}
+
+#articleContent figure.highlight pre {
+    max-width: none !important;
+    overflow: visible !important;
+    white-space: pre !important;
 }
